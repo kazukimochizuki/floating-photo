@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>floating photo</title>
+	<link rel="stylesheet" href="client-iphone.css">
+</head>
+<body>
+
+<!-- これは表示されない Data URIを取得するためのもの-->
+<canvas style="display:none"></canvas>
+
+<div id="container">
+	<form method="post" action="#" enctype="multipart/form-data">
+		<input type="text" class="txt" readonly>
+		<input type="file" accept="image/*" capture="camera" class="image_file" name="upfile">
+		<!-- <input id="up_btn" type="submit" value="Fileアップロード"> -->
+	</form>
+	<div ><img src="" alt="" id="main-img" class="photoOut" /></div><br>
+
+	<div id="result"></div><!-- メッセージを表示 -->
+
+	<div id="swipe" style="display:none"><img src="images/swipe.png"></div>
+
+</div>
+
+
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="javascripts/load-image.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+$(function(){
+
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// ファイルをプレビュー file api
+// http://blog.asial.co.jp/1079
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+// http://am-yu.net/2014/03/16/javascript%E3%81%A7%E7%B8%AE%E5%B0%8F%E7%94%BB%E5%83%8F%E3%81%AE%E4%BD%9C%E6%88%90/
+// http://am-yu.net/2014/04/11/load-image-js/
+
+	var captureForm = document.querySelector('.image_file'),//http://qiita.com/phi/items/e8d8bb6040639b641c50
+    	canvas = document.querySelector('canvas');
+
+	//写真が表示される瞬間に適応
+	captureForm.addEventListener('change', function() {
+
+		// $('#main-img').attr('src', 'images/loading.GIF');
+		//枠外に飛ばしたので、次の写真を読み込む前に元の位置に戻す
+		$('#main-img').removeAttr('style');//top-50%
+		$('#main-img').removeClass('photoOut');//top-50% 最初の一回目だけ画面の外に出ていて欲しいため
+		$('#main-img').addClass('photoIn');//top45%
+
+
+		setTimeout(function(){
+			$('#swipe').removeAttr('style');
+        	$('#swipe').fadeOut(1500);
+    	},1500);
+
+
+        // 1. 選択されたファイルがない場合は何もせずにreturn
+        if (!this.files.length) {
+            return;
+        }
+
+		var file = this.files[0],//files配列にファイルが入っています
+            image = new Image(),
+            size = 25, // 20%に縮小
+            fileReader = new FileReader();   // 4. ファイルを読み込むFileReaderオブジェクト ファイル読み出しは非同期=イベントハンドラが必要
+
+        if (file.type.match(/image.*/)) {
+        	// 5. 読み込みが完了した際のイベントハンドラ。imgのsrcにデータをセット
+	        fileReader.onloadend = function() {
+	        	// 画像が読み込めた時の処理
+		        image.onload = function() {
+
+		            var width = 0;
+		            var options = {canvas:true};
+		            var currentFile = file;
+
+		        // 画像の縦横の情報をEXIFから取得し、縦横が逆にならないように調整
+		        loadImage.parseMetaData(currentFile, function (data) {
+
+                if (data.exif) {
+                    options.orientation = data.exif.get('Orientation');
+
+                    for( key in data.exif.map){
+                        var value = data.exif[data.exif.map[key]];
+                        if(value){
+                            console.log(key + ':' + data.exif[data.exif.map[key]]); // Exif情報の出力
+                        }
+                    }
+
+                    if(options.orientation >= 5){
+                        width = image.height * (size/100);// %表示
+                    }else{
+                        width = image.width * (size/100);
+                    }
+
+                    console.log("縮小比率:" + size + '%');//ここには % が入る
+                    console.log("元々のサイズ:" + image.width + "×" + image.height);
+                    console.log("縮小後のサイズ:" + width + "×" + "height：xxx");
+
+	                }
+	                options.maxWidth = width;
+	            });
+
+	            loadImage(
+	                currentFile,
+	                function (canvas) {
+
+	                    var imageData = canvas.toDataURL();//base64
+	                    $('#main-img').attr('src', imageData);
+	                    // document.querySelector('body').appendChild(canvas); // canvasの表示
+	                    console.log(imageData);
+
+
+			            // base64->blob
+			            function toBlob(base64) {
+			            var bin = atob(base64.replace(/^.*,/, ''));
+			            var buffer = new Uint8Array(bin.length);
+			            for (var i = 0; i < bin.length; i++) {
+			                buffer[i] = bin.charCodeAt(i);
+			            }
+			            // Blobを作成
+			            try{
+			                var blob = new Blob([buffer.buffer], {
+			                    type: 'image/png'
+			                });
+			            }catch (e){
+			                return false;
+			            }
+			            return blob;
+			            }
+
+			            var blobData = toBlob(imageData);
+			            console.log(blobData);
+
+
+						// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+						// スワイプ touchmove
+						// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+							//スワイプ発生とみなす距離
+							var threshold = 300;
+
+							var hitArea = $('#main-img');//hitAreaよりもimgをスワイプして飛んだ方が自然なので変更
+							var resultWord = $('#result');
+							var doc = $(document);
+
+							var startY, currentY;
+
+							//スワイプ検知休止状態か否かのフラグ
+							var sleeping = false;
+
+
+							//touchイベントの処理
+							hitArea.on('touchstart', function(event){
+								event.preventDefault();//ブラウザの規定の挙動（ブラウザのスクロール）を止める
+								var touches = event.originalEvent.touches;//ユーザーがタッチした指の情報
+								if (touches.length>1) {
+									return;
+								}
+								var touch = touches[0];
+								startY = touch.pageY;
+								touching = true;
+							});
+
+							//touchmoveの処理
+							doc.on('touchmove', function(event){
+								if (!touching) {//タッチしてなかったら終了
+									return;
+								}
+								if (sleeping) {//検知休止がオンなら終了
+									return;
+								}
+								var touch = event.originalEvent.touches[0];
+								currentY = touch.pageY;
+								evalSwipe();
+							});
+
+							//touchend, touchcancelイベントの処理
+							doc.on('touchend touchcancel', function(){
+								if (!touching) {
+									return;
+								}
+								//ここでfalseに戻しておかないと何度もスワイプできなくなる
+								touching = false;//タッチされていない状態にする
+								// ２度送信してしまっていた原因はこれ↓ 前のデータが残ってしまっていた
+								// sleeping = false;//検知状態にする
+							});
+
+							//写真を枠外に飛ばす
+							function photoFly(){
+								$('#main-img').animate({
+										'top':'-50%'
+									}, 1000, 'swing', function(){
+											$('#main-img').attr('src', '');//飛ばした写真が残っていると不自然なので消してあげる
+											$('#main-img').removeClass('photoIn');
+										});
+							}
+
+							//メッセージ通知用関数
+							function notify(message){
+								var div = $('<div></div>').html(message);
+								resultWord.prepend(div);//resultの前に変数divを挿入
+								div.fadeOut(1200, function(){//1.2秒かけて消える
+									div.remove();
+								});
+							}
+
+							//スワイプのチェック関数
+							function evalSwipe(){
+								if ((startY + threshold) < currentY) {//閾値を超えたら発生
+									sleeping = false;//ここtrueにしておくと続けて上にスワイプしても反応しない
+									notify('そっちやないで！');
+								}
+								if (currentY < (startY - threshold)) {
+									sleeping = true;//スワイプが発生したら検知休止状態
+									notify('TAKE OFF!!');
+									photoFly();
+
+									// サーバに送信
+						            var socket = io.connect();
+									socket.emit('publish', blobData);
+									return;
+								}
+
+
+							}
+						// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+						// スワイプ 終わり
+						// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+
+		        	},
+		            options // Options
+		        );
+
+				} // image.onload
+          		image.src = fileReader.result;
+
+       		} // fileReader.onloadend
+
+        // ロードされた画像ファイルのData URLスキームは event.target.result に格納されているので確認
+        console.log(fileReader);
+
+        // 6. 画像読み込み FileReaderオブジェクトのreadAsDataURL関数で得られたURLにbase64エンコードされたデータが含まれている。
+        fileReader.readAsDataURL(file);
+        console.log(file);
+        //DataURLというのは、http://などから始まるのではなく、data:から始まる特殊なURLのことです。
+        //dataURLというのはその読み込んだ先にあるべきリソースのバイナリデータを直接URLに書いてしまったものです。
+        //これの意味するところはつまり「そのURLをブラウザに読ませればブラウザ上に表示できる」ということです。
+
+    	} //if (file.type.match(/image.*/)) {
+
+    	
+    });
+
+
+
+});
+</script>
+
+</body>
+</html>

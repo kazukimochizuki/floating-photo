@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+	<meta charset="UTF-8">
+	<title>floating photo</title>
+	<link rel="stylesheet" href="stylesheets/particles.css">
+	<script src="javascripts/jquery.particleground.js"></script>
+	<script src="javascripts/bg.js"></script>
+</head>
+	<style>
+		.receive{
+			position: absolute;
+			max-height: 60%;
+			max-width: 60%;
+			top: 200%;
+			left:50%;
+			z-index: 999 !important;
+			-moz-transform:translate(-50%, -50%);
+			-webkit-transform:translate(-50%, -50%);
+			-o-transform:translate(-50%, -50%);
+			-ms-transform:translate(-50%, -50%);
+			transform:translate(-50%, -50%);
+
+			/* border */
+			border:10px solid rgb(238, 238, 238);
+
+			/* border-radius */
+			border-radius:10px;
+			-webkit-border-radius:10px;
+			-moz-border-radius:10px;
+
+			/* box-shadow */
+			box-shadow:rgba(0, 0, 0, 0.6) 0px 0px 12px 7px;
+			-webkit-box-shadow:rgba(0, 0, 0, 0.6) 0px 0px 12px 7px;
+			-moz-box-shadow:rgba(0, 0, 0, 0.6) 0px 0px 12px 7px;
+		}
+
+		.new_img{
+			position: absolute;
+			height: 150px;
+			top:55%;
+			left:55%;
+			opacity: .9;
+			-moz-transform:translate(-50%, -50%);
+			-webkit-transform:translate(-50%, -50%);
+			-o-transform:translate(-50%, -50%);
+			-ms-transform:translate(-50%, -50%);
+			transform:translate(-50%, -50%);
+
+			/* border */
+			border:5px solid rgb(238, 238, 238);
+
+			/* border-radius */
+			border-radius:5px;
+			-webkit-border-radius:5px;
+			-moz-border-radius:5px;
+
+			/* box-shadow */
+			box-shadow:rgba(0, 0, 0, 0.4) 0px 0px 8px 5px;
+			-webkit-box-shadow:rgba(0, 0, 0, 0.4) 0px 0px 8px 5px;
+			-moz-box-shadow:rgba(0, 0, 0, 0.4) 0px 0px 8px 5px;
+		}
+
+		#title{
+			position: absolute;
+			top: 5%;
+			left: 3%;
+			z-index: 9999;
+		}
+
+		#reset{
+			border: 0;
+			border-style: none;
+			position: fixed;
+			right: 3%;
+			bottom: 3%;
+			width: 100px;
+			z-index: 9999;
+		}
+
+
+	</style>
+<body>
+
+<div id="particles"></div>
+
+<div>
+	<img src="" alt="" class="receive">
+</div>
+
+<div>
+	<img src="images/title.png" id="title">
+</div>
+
+<input type="image" src="images/reset_on.jpg" id="reset">
+
+
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="javascripts/jqfloat.js"></script>
+<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+<script>
+$(document).ready(function() {
+	var socket = io.connect();
+
+	socket.on('stream', function(data) { //受け取ったデータはコールバック変数
+			function ArrayBufferToBase64(buffer) {
+			    var binary = ''
+			    var bytes = new Uint8Array(buffer)
+			    var len = bytes.byteLength;
+			    for (var i = 0; i < len; i++) {
+			        binary += String.fromCharCode( bytes[ i ] )
+			    }
+			    return window.btoa(binary);
+			}
+
+			var base64 = ArrayBufferToBase64(data);
+			console.log(data);
+
+			var receive = $('.receive');
+			receive.removeAttr('style');
+			receive.attr('src', '');//一回空にしてあげる
+			receive.attr('src', "data:image/png;base64," +base64);
+
+			receive.animate({
+				'top' : '50%'
+			}, 1000, 'swing', function(){
+
+				receive.fadeOut(10000, function(){
+
+					// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+					// 背景写真を浮遊させる
+					// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+					var random = Math.floor(Math.random()*1000);
+					//最新のimgだけに適応させる
+					$("img:last").removeAttr('style', 'display');
+					$("img:last").jqFloat({
+						width: random + 1600,
+				        height: random + 900,
+				        speed: random * 10 + 40000
+					});
+
+				})
+
+			})
+
+			// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+			// 背景の写真
+			// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+			var new_img = document.createElement("img");
+			new_img.src = "data:image/png;base64," +base64;
+			new_img.className = "new_img";
+			new_img.style.display = "none";
+			// new_img.style.zIndex = -99;
+			document.body.appendChild(new_img);
+
+		});
+	
+
+	$('#reset').click(function() {
+		socket.emit('clear');
+		clear();
+	});
+
+	socket.on('clear', function(){
+		clear();
+	});
+
+	socket.on('init', function(cache) { //受け取ったデータはコールバック変数
+			function ArrayBufferToBase64(buffer) {
+			    var binary = ''
+			    var bytes = new Uint8Array(buffer)
+			    var len = bytes.byteLength;
+			    for (var i = 0; i < len; i++) {
+			        binary += String.fromCharCode( bytes[ i ] )
+			    }
+			    return window.btoa(binary);
+			}
+
+			var base64 = ArrayBufferToBase64(cache);
+			console.log("initのキャッシュ"+cache);
+
+			var receive = $('.receive');
+			receive.removeAttr('style');
+			receive.attr('src', '');//一回空にしてあげる
+			receive.attr('src', "data:image/png;base64," +base64);
+
+			receive.queue(function(){
+
+					// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+					// 背景写真を浮遊させる
+					// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+					var random = Math.floor(Math.random()*1000);
+					//最新のimgだけに適応させる
+					$("img:last").removeAttr('style', 'display');
+					$("img:last").jqFloat({
+						width: random + 1600,
+				        height: random + 900,
+				        speed: random * 10 + 40000
+					});
+
+				})
+
+
+			// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+			// 背景の写真
+			// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+			var new_img = document.createElement("img");
+			new_img.src = "data:image/png;base64," +base64;
+			new_img.className = "new_img";
+			new_img.style.display = "none";
+			// new_img.style.zIndex = -99;
+			document.body.appendChild(new_img);
+
+		});
+
+
+
+});
+
+
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+// タイトル、リセットボタン
+// ＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝
+
+$(document).ready(function() {
+	$('#title').jqFloat({
+		width: 0,
+	    height: 20,
+	    speed: 1500
+	});
+});
+
+
+$('#reset').click(function(){
+	$('.new_img:last').remove();
+});
+
+//ホバー効果
+$(function(){
+  $('#reset').hover(function(){
+    $(this).attr('src', $(this).attr('src').replace('_off', '_on'));
+  }, function(){
+    if (!$(this).hasClass('currentPage')) {
+      $(this).attr('src', $(this).attr('src').replace('_on', '_off'));
+    }
+  });
+});
+
+
+
+</script>
+
+	
+</body>
+</html>

@@ -1,0 +1,98 @@
+*{
+	margin: 0;
+	padding: 0;
+}
+body{
+	background: url(images/bg.png)center top no-repeat;
+	-moz-background-size: cover;
+	-webkit-background-size: cover;
+	-o-background-size: cover;
+	-ms-background-size: cover;
+	background-size: cover;
+}
+#result{
+	text-align: center;
+	margin-top: -600px;
+	font-size: 4em;
+	color: #fff;
+}
+
+#swipe{
+	position:absolute;
+	top:50%;
+	left:50%;
+	-moz-transform:translate(-50%, -50%);
+	-webkit-transform:translate(-50%, -50%);
+	-o-transform:translate(-50%, -50%);
+	-ms-transform:translate(-50%, -50%);
+	transform:translate(-50%, -50%);
+}
+
+
+form{
+	position: absolute;
+	width: 300px;
+	top: 90%;
+	left:50%;
+	-moz-transform:translate(-50%, -50%);
+	-webkit-transform:translate(-50%, -50%);
+	-o-transform:translate(-50%, -50%);
+	-ms-transform:translate(-50%, -50%);
+	transform:translate(-50%, -50%);
+}
+
+/*
+ボタンの画像（ダミー）の上に同じサイズの
+透明な<input type=file>が乗っかっている状態
+*/
+.image_file{
+	position: absolute;
+	top: 0;
+	right: 0;
+	opacity: 0;
+	z-index:99;
+    width: 300px;
+	height: 100px;
+}
+
+.txt{
+	background-image: url(images/button.gif);
+	background-color: rgba(0,0,0,0);
+	border: 0;
+	top: 0;
+	right: 0;
+	width: 300px;
+	height: 100px;
+}
+
+.photoOut{
+	position: absolute;
+	top:-50%;
+}
+
+.photoIn{
+	position: absolute;
+	max-height: 70%;
+	max-width: 80%;
+	/*width: 600px;最大600pxとしてしてあげるのが安心*/
+	top:45%;
+	left:50%;
+	-moz-transform:translate(-50%, -50%);
+	-webkit-transform:translate(-50%, -50%);
+	-o-transform:translate(-50%, -50%);
+	-ms-transform:translate(-50%, -50%);
+	transform:translate(-50%, -50%);
+
+	/* border */
+	border:10px solid rgb(238, 238, 238);
+
+	/* border-radius */
+	border-radius:10px;
+	-webkit-border-radius:10px;
+	-moz-border-radius:10px;
+
+	/* box-shadow */
+	box-shadow:rgba(0, 0, 0, 0.4) 0px 0px 10px 5px;
+	-webkit-box-shadow:rgba(0, 0, 0, 0.4) 0px 0px 10px 5px;
+	-moz-box-shadow:rgba(0, 0, 0, 0.4) 0px 0px 10px 5px;
+}
